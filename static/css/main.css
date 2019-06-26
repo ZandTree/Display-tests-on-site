@@ -1,0 +1,10 @@
+body {
+    background: #d3d4c9;
+}
+.quest {
+    border-top: 2px solid green;
+    border-bottom: 2px solid green;
+}
+.redFlag {
+    color:red;
+}
