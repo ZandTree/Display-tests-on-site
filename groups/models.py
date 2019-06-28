@@ -25,7 +25,7 @@ class Quiz(Step):
     times_taken = models.IntegerField(default=0,editable=False)
     def __str__(self):
         return 'test{} {}'.format(self.order,self.title)
-
+# path('display/<int:group_pk>/<int:quiz_pk>/',views.QuizDetail.as_view(),name='quiz'),
     def get_absolute_url(self):
         return reverse('groups:quiz',
                         kwargs={'group_pk':self.group_id,'quiz_pk':self.id})
@@ -45,6 +45,7 @@ class Question(models.Model):
     def __str__(self):
         return self.prompt
 
+
 class MulitpleChoiceQuestion(Question):
     shuffle_answers = models.BooleanField(default=False)
 
@@ -56,6 +57,7 @@ class Answer(models.Model):
     correct = models.BooleanField(default=False)
     text = models.CharField(max_length=1024)
     order = models.IntegerField(default=0)
+
     def __str__(self):
         return 'answer {} for question {}'.format(self.id,self.question)
     class Meta:

@@ -1,8 +1,53 @@
 {% extends 'base.html '%}
 {% load static %}
+{% load bootstrap4 %}
 
 {% block content %}
+    <h4 class="mt-3">Detail about this quiz</h4>
+    <p>Tilte: <strong>{{object.title}}</strong></p>
+    <p>Discription:<strong>{{object.description}}</strong></p>
+    <p>Order: <strong>{{object.order}}</strong></p>
+    <p>From group: <strong>{{object.group}}</strong></p>
+    <p>Total Questions: <strong>{{object.question_set.count}}</strong></p>
+    <p>times_taken: <strong>{{object.times_taken}}</strong></p>
+    <hr>
+    <p>Questions for this Quiz:</p>
+    <!-- object here quiz=step -->
+    <ul class="no-bullet">
+        {% for quest in object.question_set.all %}
+        <li>
+            <p><strong>{{quest.prompt}}</strong></p>
+            {% for ans in quest.answer_set.all %}
+                <div clas="callout"> {{ans.text}}</div>
+            {% endfor %}
+            {% if user.is_authenticated %}
+            <!-- # path('edit-question/<int:question_pk>/quiz/<int:quiz_pk> -->
+                <a href="{% url 'groups:edit-question' question_pk=quest.pk quiz_pk=quest.quiz_id %}">Edit question</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    <hr>
+    <a href="{% url 'groups:groups-list' %}">Back to a list group</a><br>
+    <hr>
+    <div>
+        <a class="adjust-margin" href="{% url 'groups:edit-quiz' object.group_id object.id %}">
+            <button class="btn btn-success">Edit Quiz</button>
+        </a>
+    </div>
+    <hr>
+    <div class="">
+            <a  href="{% url 'groups:create-question' quiz_pk=object.id question_type='mc' %}">
+                <button class="btn btn-info">Create MultipleChoice Question</button>
+            </a>
+            <a  href="{% url 'groups:create-question' quiz_pk=object.id question_type='tf' %}">
+                <button class="btn btn-secondary float-right">Create TrueFalse Question</button>
+            </a>
+    </div>
 
-<h1>Detail about quiz coming</h1>
+
+
+
+
 
 {% endblock %}

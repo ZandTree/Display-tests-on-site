@@ -6,16 +6,19 @@
             <div class="quest">
                 <h4>Title: {{group.title}}</h4>
                 <p>Created: {{group.created_at}}</p>
-                <p>Description: {{group.description}}</p>
+                <p class="gray-color">Description: {{group.description}}</p>
                 <hr>
-                <p><strong>Quizzes</strong> of this group</p>
-                <ul>
+                <ul class="adjust-margin">
                     {% if group.quiz_set.all %}
                         {% for quiz in group.quiz_set.all%}
-                            <a href="{{quiz.get_absolute_url}}"><li>{{quiz.title}}</li></a>
+                        <li>Quiz: {{quiz.order}}  <a href="{{quiz.get_absolute_url}}">{{quiz.title}}</a></li>
                         {% endfor%}
                     {% else %}
-                    <p>No quizzes at this moment</p>
+                    <p class="adjust-margin">No quizzes at this moment</p>
+
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'groups:create-quiz' group.pk %}"><button class="btn btn-success mt-3">Create New Quiz</button></a>
                     {% endif %}
                 </ul>
             </div>

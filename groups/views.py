@@ -1,7 +1,12 @@
-from django.shortcuts import render,get_object_or_404
-from django.views.generic import ListView,DetailView,CreateView
+from django.shortcuts import render,get_object_or_404,redirect
+from django.urls import reverse_lazy
+from django.views.generic import (ListView,DetailView,
+                                CreateView,UpdateView,
+                                View,FormView
+                                )
 from .models import *
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect,Http404
 from . import forms
 from django.contrib.auth.models import User
@@ -18,70 +23,129 @@ class GroupList(ListView):
 
 class QuizDetail(DetailView):
     model = Quiz
-
     def get_object(self):
         group_id = self.kwargs.get('group_pk')
-        id = self.kwargs.get('quiz_pk')        
+        quiz_id = self.kwargs.get('quiz_pk')
+        try:
+            object = Quiz.objects.select_related('group').get(
+                                group_id=group_id,id=quiz_id)
+        except Quiz.DoesNotExist:
+            raise Http404
+        return object
+
+class QuizCreate(CreateView):
+    model = Quiz
+    fields = ['title','description','order','total_questions']
+    template_name = 'groups/create_quiz.html'
+
+    def form_valid(self,form):
+        group_pk = self.kwargs.get('pk')
+        group = get_object_or_404(Group,id=group_pk)
+        quiz = form.save(commit=False)
+        quiz.group = group
+        quiz.save()
+        messages.add_message(self.request,messages.SUCCESS,"Quiz added!")
+        return HttpResponseRedirect(quiz.get_absolute_url())
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        context['create'] = True
+        return context
+
+class QuizEdit(SuccessMessageMixin,UpdateView):
+    model = Quiz
+    fields = ['title','description','order','total_questions']
+    template_name = 'groups/create_quiz.html'
+    # static success_message can be here as well
+    def get_object(self):
+        group_id = self.kwargs.get('group_pk')
+        id = self.kwargs.get('quiz_pk')
         try:
             object = Quiz.objects.select_related('group').get(
                                 group_id=group_id,id=id)
         except Quiz.DoesNotExist:
             raise Http404
         return object
+    def get_success_message(self,*args,**kwargs):
+        return 'Quiz "{}"  successfully updated'.format(self.get_object().title)
 
-class QuizCreate(CreateView):
-    pass
-# def quiz_create(request,course_pk):
-#     course = get_object_or_404(models.Course,pk=course_pk,published=True)
-#     form = forms.QuizForm()
-#     if request.method == 'POST':
-#         form = forms.QuizForm(request.POST)
-#         if form.is_valid():
-#             quiz = form.save(commit=False)
-#             quiz.course = course
-#             quiz.save()
-#             messages.add_message(request,messages.SUCCESS,"Quiz added!")
-#             return HttpResponseRedirect(quiz.get_absolute_url())
-#
-#     return render(request,'courses/quiz_form.html',{'form':form,'course':course})
-#
-#
-# @login_required
-# def quiz_edit(request,course_pk,quiz_pk):
-#     quiz = get_object_or_404(models.Quiz,pk=quiz_pk, course_id=course_pk,course__published=True)
-#     form = forms.QuizForm(instance=quiz)
-#     if request.method == 'POST':
-#         form = forms.QuizForm(instance=quiz,data=request.POST)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request,"Quiz updated!".format(form.cleaned_data['title']))
-#             return HttpResponseRedirect(quiz.get_absolute_url())
-#
-#     return render(request,'courses/quiz_form.html',{'form':form,'course':quiz.course})
-#
-#
-# @login_required
-# def create_question(request,quiz_pk,question_type):
-#     quiz =get_object_or_404(models.Quiz,pk=quiz_pk)
-#     if question_type == 'tf':
-#         form_class = forms.TrueFalseQuestionForm
-#     else:
-#         form_class = forms.MultipleChoiceQuestionForm
-#     form = form_class()
-#     if request.method =='POST':
-#         form = form_class(request.POST)
-#         if form.is_valid():
-#             question = form.save(commit=False)
-#             question.quiz = quiz
-#             question.save()
-#             messages.success(request,'Question created')
-#             return HttpResponseRedirect(quiz.get_absolute_url())
-#
-#     return render(request,'courses/question_form.html',
-#         {'quiz': quiz,
-#         'form':form}
-#     )
-# @login_required
+class QuestionCreate(FormView):
+    template_name ='groups/create_question.html'
+
+    def get_form_class(self,form_class=None):
+        question_type = self.kwargs.get('question_type')
+        if question_type == 'mc':
+            form_class = forms.MultipleChoiceQuestionForm
+        else:
+            form_class = forms.TrueFalseQuestionForm
+        return form_class
+
+    def form_valid(self,form):
+        question = form.save(commit=False)
+        quiz_pk = self.kwargs.get('quiz_pk')
+        quiz = get_object_or_404(Quiz,id=quiz_pk)
+        question.quiz = quiz
+        question.save()
+        return HttpResponseRedirect(question.get_absolute_url())
+
+class QuestEdit(SuccessMessageMixin,UpdateView):
+    model = Question
+    template_name ='groups/create_question.html'
+
+    def get_object(self):
+        quiz_id = self.kwargs.get('quiz_pk')
+        question_id = self.kwargs.get('question_pk')
+        try:
+            object = Question.objects.select_related('quiz').get(
+                                quiz_id=quiz_id,id=question_id)
+        except Question.DoesNotExist:
+            raise Http404
+        return object
+    def get_form_class(self,form_class=None):
+        question = self.get_object()
+        if hasattr('question','truefalsequestion'):
+            form_class = forms.TrueFalseQuestionForm
+        else:
+            form_class = forms.MultipleChoiceQuestionForm
+        return form_class
+    def get_success_message(self,*args,**kwargs):
+        return 'Question "{}"  successfully updated'.format(self.get_object())
+
+class AnswerCreate(CreateView):
+    model = Answer
+    template_name = 'groups/create_answer.html'
+    form_class = forms.AnswerForm()
+    # success_url = '/'
+
+    def form_valid(self,form):
+        quest_id = self.kwargs.get('pk')
+        quest = get_object_or_404(Question,id=quest_id)
+        answer = form(commit=False)
+        answer.question = quest
+        answer.save()
+        return HttpResponseRedirect(quest.get_absolute_url())
+"""
+TypeError at /groups/create-answer/1/
+'AnswerForm' object is not callable
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # @login_required
 # def edit_question(request,quiz_pk,question_pk):
 #     question =get_object_or_404(models.Question,pk=question_pk,quiz_id = quiz_pk)
 #     if hasattr(question,'truefalsequestion'):
@@ -116,12 +180,3 @@ class QuizCreate(CreateView):
 #         return HttpResponseRedirect(question.get_absolute_url())
 #     return render(request,'courses/create_answer.html',{'question':question,'form':form})
 #
-
-# class Search(View):
-#     def get(self,request):
-#         word = request.GET.get('q')
-#         group = models.Group.objects.filter(
-#             Q( title__icontains=word)|Q(description__icontains=word),
-#             published=True
-#             )
-#         return render(request,'groups/group_list.html',{'groups':groups})

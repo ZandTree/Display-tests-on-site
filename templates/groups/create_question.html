@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+{% block content %}
+<div class="row">
+    <form class="" action="" method="post">
+        <h4>{{form.instance.prompt|default:"Make a new question"}} </h4>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <input type="submit" name="" class="btn btn-success" value="Save">
+    </form>
+
+</div>
+<hr>
+{% if user.is_authenticated and form.instance.pk %}
+    <a href="{% url 'groups:create-answer' pk=form.instance.pk %}" class='btn btn-primary'>Add Answer</a>
+{% endif %}
+
+
+{% endblock %}

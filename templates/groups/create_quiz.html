@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block content %}
+<form class="" action="" method="post">
+    <h4>{{form.instance.title|default:"New Quiz" }}</h4>
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <input type="submit" class="btn btn-primary" value="Save">
+</form>
+{% endblock %}

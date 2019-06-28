@@ -8,3 +8,15 @@ body {
 .redFlag {
     color:red;
 }
+.adjust-margin{
+    /* padding-left: 0px; */
+    list-style-type: none;
+    padding:10px 0 10px;
+}
+.gray-color{
+    background-color: #dfe0e2;
+}
+.no-bullet {
+    list-style-type: none;
+    
+}

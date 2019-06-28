@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block content %}
+{% if create %}
+<h4>Create new quiz</h4>
+{% else %}
+<h4>Edit this quiz</h4>
+{% endif %}
+<form class="" action="" method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <input type="submit" class="btn btn-primary" value="Edit Quiz">
+
+</form>
+
+{% endblock %}
