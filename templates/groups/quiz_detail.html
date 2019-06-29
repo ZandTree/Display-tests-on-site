@@ -15,16 +15,21 @@
     <!-- object here quiz=step -->
     <ul class="no-bullet">
         {% for quest in object.question_set.all %}
-        <li>
+        <li class="dik">
             <p><strong>{{quest.prompt}}</strong></p>
-            {% for ans in quest.answer_set.all %}
-                <div clas="callout"> {{ans.text}}</div>
+            {% for an in quest.ans.all %}
+                {{forloop.counter}}
+                <p class="callout">{{an.text}}</p>
+                {% empty %}
+                <p>Answers coming</p>
             {% endfor %}
+            <hr>
             {% if user.is_authenticated %}
             <!-- # path('edit-question/<int:question_pk>/quiz/<int:quiz_pk> -->
                 <a href="{% url 'groups:edit-question' question_pk=quest.pk quiz_pk=quest.quiz_id %}">Edit question</a>
             {% endif %}
         </li>
+
         {% endfor %}
     </ul>
     <hr>

@@ -12,6 +12,7 @@ from . import forms
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
 class GroupList(ListView):
     model = Group
     # def get_queryset(self):
@@ -70,7 +71,7 @@ class QuizEdit(SuccessMessageMixin,UpdateView):
         return 'Quiz "{}"  successfully updated'.format(self.get_object().title)
 
 class QuestionCreate(FormView):
-    template_name ='groups/create_question.html'
+    template_name ='groups/create__edit_question.html'
 
     def get_form_class(self,form_class=None):
         question_type = self.kwargs.get('question_type')
@@ -90,7 +91,7 @@ class QuestionCreate(FormView):
 
 class QuestEdit(SuccessMessageMixin,UpdateView):
     model = Question
-    template_name ='groups/create_question.html'
+    template_name ='groups/create_edit_question.html'
 
     def get_object(self):
         quiz_id = self.kwargs.get('quiz_pk')
@@ -112,22 +113,21 @@ class QuestEdit(SuccessMessageMixin,UpdateView):
         return 'Question "{}"  successfully updated'.format(self.get_object())
 
 class AnswerCreate(CreateView):
-    model = Answer
     template_name = 'groups/create_answer.html'
-    form_class = forms.AnswerForm()
-    # success_url = '/'
+    form_class = forms.AnswerForm # to create one single form to create Answer
+    # form_class = forms.AnswerFormSet (queryset=Question.)#to create the whole bunch of forms
 
     def form_valid(self,form):
         quest_id = self.kwargs.get('pk')
         quest = get_object_or_404(Question,id=quest_id)
-        answer = form(commit=False)
+        answer = form.save(commit=False)
         answer.question = quest
         answer.save()
+        messages.success(self.request, "Answer '{}' saved successfully".format(answer.text))
+        # return super().form_valid(form)
         return HttpResponseRedirect(quest.get_absolute_url())
-"""
-TypeError at /groups/create-answer/1/
-'AnswerForm' object is not callable
-"""
+
+
 
 
 

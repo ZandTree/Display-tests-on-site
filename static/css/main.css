@@ -18,5 +18,16 @@ body {
 }
 .no-bullet {
     list-style-type: none;
-    
+
+}
+.callout{
+    width:30%;
+    background: salmon;
+    margin-left: 2rem;
+    padding-left: 1rem;
+    /* padding-right: 1.5rem; */
+}
+.dik {
+    border-bottom: 2px solid green;
+    padding-top: 2rem;
 }

@@ -1,5 +1,7 @@
 from django import forms
 from . import models
+from django.forms import modelformset_factory
+
 class QuizForm(forms.ModelForm):
     class Meta:
         model = models.Quiz
@@ -20,13 +22,12 @@ class MultipleChoiceQuestionForm(forms.ModelForm):
         fields = ['order','prompt','shuffle_answers']
 
 class AnswerForm(forms.ModelForm):
-
     class Meta:
         model = models.Answer
         fields = ['text','order','correct']
 
-# AnswerFormSet = forms.modelformset_factory(
-#         models. Answer,
-#         forms = AnswerForm
-#         extra=2
-#         )
+AnswerFormSet = forms.modelformset_factory(
+                        models. Answer,
+                        form = AnswerForm
+                        # extra=2
+                    )
