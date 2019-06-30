@@ -3,11 +3,51 @@
 {% load bootstrap4 %}
 
 {% block content %}
+<p>Let op: regular formset vs inline-formset</p>
+<p>inline-formset is different: model inside another model(already seen in admin)</p>
 <form class="" action="" method="post">
     <h4>Add answer</h4>
     {% csrf_token %}
-    {% bootstrap_form form %}
+    {{formset.management_form}}
+    <section>
+        <p>Option N1</p>
+        <p>errors {{formset.errors}}</p>
+        {% for form in formset %}
+            {% bootstrap_form form %}
+            <hr>
+        {% endfor %}
+    </section>
+    <section>
+        <p>Option N2</p>
+        {{form.as_p}}
+        <table class="table-striped table-bordered mb-3">
+            <thead>
+                <tr>
+                    <th class="text-center" scope="col" style="width:10%" ><bold>#id</bold></th>
+                    <th class="text-center" scope="col" style="width:10%" >Order</th>
+                    <th class="text-center" scope="col" style="width:100%">Text</th>
+                    <th class="text-center" scope="col" style="width:10%">Correct</th>
+                    <th class="text-center" scope="col" style="width:10%">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                    <tr class='nice-table'>
+                        <td class="text-center">{% if form.instance.id%}{{form.instance.id}}{%else%}{% endif %}</td>
+                        <td class="text-center">{{form.order}}</td>
+                        <td>{{form.text}}</td>
+                        <td class="text-center">{{form.correct}}</td>
+                            {% if form.instance.id %}
+                                <td>Delete{{form.DELETE}}</td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
     <input type="submit" class="btn btn-primary" value="Save">
-
 </form>
+
 {% endblock %}

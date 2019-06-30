@@ -1,5 +1,5 @@
 body {
-    background: #d3d4c9;
+    background: #f2d2c7;
 }
 .quest {
     border-top: 2px solid green;
@@ -30,4 +30,14 @@ body {
 .dik {
     border-bottom: 2px solid green;
     padding-top: 2rem;
+}
+.push_bottom {
+    margin-bottom: 3rem;
+    padding-bottom: :2rem;
+}
+.nice-table{
+
+}
+.nice-table td input{
+    width:100%;
 }

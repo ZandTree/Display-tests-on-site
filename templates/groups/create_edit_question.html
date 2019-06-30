@@ -9,12 +9,10 @@
         {% bootstrap_form form %}
         <input type="submit" name="" class="btn btn-success" value="Save">
     </form>
-
 </div>
 <hr>
-{% if user.is_authenticated and form.instance.pk %}
-    <a href="{% url 'groups:create-answer' pk=form.instance.pk %}" class='btn btn-primary'>Add Answer</a>
-{% endif %}
-
-
+    {% if user.is_authenticated and form.instance.pk %}
+        <p>Let of od of this question is: {{form.instance.id}}</p>
+        <a href="{% url 'groups:create-answer' form.instance.pk %}" class='btn btn-primary'>Add Answer</a>
+    {% endif %}
 {% endblock %}

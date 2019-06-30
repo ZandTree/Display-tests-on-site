@@ -71,7 +71,7 @@ class QuizEdit(SuccessMessageMixin,UpdateView):
         return 'Quiz "{}"  successfully updated'.format(self.get_object().title)
 
 class QuestionCreate(FormView):
-    template_name ='groups/create__edit_question.html'
+    template_name ='groups/create_edit_question.html'
 
     def get_form_class(self,form_class=None):
         question_type = self.kwargs.get('question_type')
@@ -112,22 +112,61 @@ class QuestEdit(SuccessMessageMixin,UpdateView):
     def get_success_message(self,*args,**kwargs):
         return 'Question "{}"  successfully updated'.format(self.get_object())
 
-class AnswerCreate(CreateView):
-    template_name = 'groups/create_answer.html'
-    form_class = forms.AnswerForm # to create one single form to create Answer
-    # form_class = forms.AnswerFormSet (queryset=Question.)#to create the whole bunch of forms
+class AnswerCreate(View):
+    def get(self,request,pk):
+        quest = get_object_or_404(Question,id=pk)
+        formset = forms.AnswerFormSet(queryset=quest.ans.all())
+        return render(request,'groups/create_answer.html',{'formset':formset})
 
-    def form_valid(self,form):
+    def post(self,request,**kwargs):
         quest_id = self.kwargs.get('pk')
         quest = get_object_or_404(Question,id=quest_id)
-        answer = form.save(commit=False)
-        answer.question = quest
-        answer.save()
-        messages.success(self.request, "Answer '{}' saved successfully".format(answer.text))
+        formset = forms.AnswerFormSet(request.POST,queryset=quest.ans.all())
+        if formset.is_valid():
+            answers= formset.save(commit=False)
+            for answer in answers:
+                answer.question = quest
+                answer.save()
+        messages.success(self.request, "Answers saved successfully")
         # return super().form_valid(form)
         return HttpResponseRedirect(quest.get_absolute_url())
 
+# example for DigitalProducts
+# def post(...):
+#     formset = forms.DigitalProductsFormset(request.POST) # without question
+#     if formset.is_valid():
+#         for form in formset:
+#             if form.is_valid():
+#                 form.save()
+#         return HttpResponseRedirect(or x.get_absolute_url,or reverse(...))
 
+
+#let look at the formset = special set of fields to controle Num fields:
+"""
+
+fot the whole formset = one bundel
+<input type="hidden" name="form-TOTAL_FORMS" value="3" id="id_form-TOTAL_FORMS" />
+<input type="hidden" name="form-INITIAL_FORMS" value="2" id="id_form-INITIAL_FORMS" />
+<input type="hidden" name="form-MIN_NUM_FORMS" value="0" id="id_form-MIN_NUM_FORMS" />
+
+# default value = 1000
+<input type="hidden" name="form-MAX_NUM_FORMS" value="1000" id="id_form-MAX_NUM_FORMS" />
+
+#custom (here max_num = 5 in forms.py) ==> value = 5
+<input type="hidden" name="form-MAX_NUM_FORMS" value="5" id="id_form-MAX_NUM_FORMS" />
+otherwise:(if no bundel above)
+django.forms.utils.ValidationError: ['ManagementForm data is missing or has been tampered with']
+"""
+#For each form in formset (iteration)
+"""
+<tr><th><label for="id_form-0-text">Text:</label></th><td>
+<input type="text" name="form-0-text" value="Yes" id="id_form-0-text" maxlength="1024" /></td></tr>
+<tr><th><label for="id_form-0-order">Order:</label></th><td>
+<input type="number" name="form-0-order" value="1" id="id_form-0-order" /></td></tr>
+<tr><th><label for="id_form-0-correct">Correct:</label></th><td>
+<input type="checkbox" name="form-0-correct" id="id_form-0-correct" />
+<input type="hidden" name="form-0-id" value="15" id="id_form-0-id" /></td></tr> <tr><th><label for="id_form-1-text">Text:</label></th><td>
+"""
 
 
 

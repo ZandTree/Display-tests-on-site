@@ -28,6 +28,16 @@ class AnswerForm(forms.ModelForm):
 
 AnswerFormSet = forms.modelformset_factory(
                         models. Answer,
-                        form = AnswerForm
-                        # extra=2
+                        form = AnswerForm,
+                        max_num=5,
+                        # extra=2 # existed already (if they are) + these 2 extra
+                        # or min_count and max_count
                     )
+AnswerInlineFormSet =forms.inlineformset_factory(
+                models.Question,
+                models.Answer,
+                extra=0,
+                fields=('order','text','correct'),
+                formset=AnswerFormSet,
+
+)
