@@ -14,6 +14,7 @@
     <p>Questions for this Quiz:</p>
     <!-- object here quiz=step -->
     <ul class="no-bullet">
+        
         {% for quest in object.question_set.all %}
         <li class="dik">
             <p><strong>{{quest.prompt}}</strong></p>
@@ -24,9 +25,12 @@
                 <p>Answers coming</p>
             {% endfor %}
             <hr>
-            {% if user.is_authenticated %}
-            <!-- # path('edit-question/<int:question_pk>/quiz/<int:quiz_pk> -->
-                <a href="{% url 'groups:edit-question' question_pk=quest.pk quiz_pk=quest.quiz_id %}">Edit question</a>
+            {% if user.is_authenticated  %}
+            <div class="">
+                <a href="{% url 'groups:edit-question' question_pk=quest.pk quiz_pk=quest.quiz_id %}" class="btn btn-success" >Edit question and answers</a>
+
+            </div>
+
             {% endif %}
         </li>
 

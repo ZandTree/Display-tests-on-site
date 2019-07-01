@@ -7,12 +7,39 @@
         <h4>{{form.instance.prompt|default:"Make a new question"}} </h4>
         {% csrf_token %}
         {% bootstrap_form form %}
-        <input type="submit" name="" class="btn btn-success" value="Save">
+        <h4>Add answer</h4>
+            {% csrf_token %}
+            {{answer_forms.management_form}}
+            <p>errors:{{answer_forms.errors}}</p>
+        <section>
+            <table class="table-striped table-bordered mb-3">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col" style="width:10%" ><bold>#id</bold></th>
+                        <th class="text-center" scope="col" style="width:10%" >Order</th>
+                        <th class="text-center" scope="col" style="width:100%">Text</th>
+                        <th class="text-center" scope="col" style="width:10%">Correct</th>
+                        <th class="text-center" scope="col" style="width:10%">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in answer_forms %}
+                        <tr class='nice-table'>
+                            <td class="text-center">{% if form.instance.id%}{{form.instance.id}}{%else%}{% endif %}</td>
+                            <td class="text-center">{{form.order}}</td>
+                            <td>{{form.text}}</td>
+                            <td class="text-center">{{form.correct}}</td>
+                                {% if form.instance.id %}
+                                    <td>Delete{{form.DELETE}}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <input type="submit" class="btn btn-primary" value="Save">
     </form>
-</div>
-<hr>
-    {% if user.is_authenticated and form.instance.pk %}
-        <p>Let of od of this question is: {{form.instance.id}}</p>
-        <a href="{% url 'groups:create-answer' form.instance.pk %}" class='btn btn-primary'>Add Answer</a>
-    {% endif %}
+
 {% endblock %}

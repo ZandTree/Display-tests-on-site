@@ -70,7 +70,8 @@ class QuizEdit(SuccessMessageMixin,UpdateView):
     def get_success_message(self,*args,**kwargs):
         return 'Quiz "{}"  successfully updated'.format(self.get_object().title)
 
-class QuestionCreate(FormView):
+class QuestionCreate(CreateView):
+    model = Question
     template_name ='groups/create_edit_question.html'
 
     def get_form_class(self,form_class=None):
@@ -81,18 +82,41 @@ class QuestionCreate(FormView):
             form_class = forms.TrueFalseQuestionForm
         return form_class
 
-    def form_valid(self,form):
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            self.object = form.save(commit=False)
+        answer_forms = forms.AnswerInlineFormSet(request.POST,queryset=Answer.objects.none())
+        if form.is_valid() and answer_forms.is_valid():
+            return self.form_valid(form, answer_forms)
+        else:
+            return self.form_invalid(form, answer_forms)
+
+    def form_valid(self,form,answer_forms):
         question = form.save(commit=False)
         quiz_pk = self.kwargs.get('quiz_pk')
         quiz = get_object_or_404(Quiz,id=quiz_pk)
         question.quiz = quiz
         question.save()
+        answers = answer_forms.save(commit=False)
+        for ans in answers:
+            ans.question = question
+            ans.save()
         return HttpResponseRedirect(question.get_absolute_url())
+
+    def get_context_data(self,** kwargs):
+        print('get_context_data calling')
+        context = super().get_context_data(**kwargs)
+        context['answer_forms'] = forms.AnswerInlineFormSet(
+                            queryset=Answer.objects.none()
+                            )
+        return context
 
 class QuestEdit(SuccessMessageMixin,UpdateView):
     model = Question
     template_name ='groups/create_edit_question.html'
-
     def get_object(self):
         quiz_id = self.kwargs.get('quiz_pk')
         question_id = self.kwargs.get('question_pk')
@@ -102,6 +126,7 @@ class QuestEdit(SuccessMessageMixin,UpdateView):
         except Question.DoesNotExist:
             raise Http404
         return object
+
     def get_form_class(self,form_class=None):
         question = self.get_object()
         if hasattr('question','truefalsequestion'):
@@ -109,64 +134,48 @@ class QuestEdit(SuccessMessageMixin,UpdateView):
         else:
             form_class = forms.MultipleChoiceQuestionForm
         return form_class
+
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = form_class(request.POST,instance=self.get_object())
+        ans_qs = self.get_object().ans.all()
+        print(ans_qs)
+        answer_forms = forms.AnswerInlineFormSet(request.POST,queryset=ans_qs)
+        if form.is_valid():
+            print('form is valid')
+        # if answer_forms.is_valid():
+        #     print("answer_forms is valid")
+        if form.is_valid(): # and answer_forms.is_valid():
+            return self.form_valid(form,answer_forms)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self,form,answer_forms):
+        question = form.save()
+        answers = answer_forms.save(commit=False)
+        for ans in answers:
+            ans.question = question
+            ans.save()
+        return HttpResponseRedirect(question.get_absolute_url())
+
+    def get_context_data(self,** kwargs):
+        print('get_context_data calling')
+        context = super().get_context_data(**kwargs)
+        ans_qs = self.get_object().ans.all()
+        context['answer_forms'] = forms.AnswerInlineFormSet(
+                            queryset=ans_qs
+                            )
+        return context
+
     def get_success_message(self,*args,**kwargs):
         return 'Question "{}"  successfully updated'.format(self.get_object())
 
-class AnswerCreate(View):
-    def get(self,request,pk):
-        quest = get_object_or_404(Question,id=pk)
-        formset = forms.AnswerFormSet(queryset=quest.ans.all())
-        return render(request,'groups/create_answer.html',{'formset':formset})
-
-    def post(self,request,**kwargs):
-        quest_id = self.kwargs.get('pk')
-        quest = get_object_or_404(Question,id=quest_id)
-        formset = forms.AnswerFormSet(request.POST,queryset=quest.ans.all())
-        if formset.is_valid():
-            answers= formset.save(commit=False)
-            for answer in answers:
-                answer.question = quest
-                answer.save()
-        messages.success(self.request, "Answers saved successfully")
-        # return super().form_valid(form)
-        return HttpResponseRedirect(quest.get_absolute_url())
-
-# example for DigitalProducts
-# def post(...):
-#     formset = forms.DigitalProductsFormset(request.POST) # without question
-#     if formset.is_valid():
-#         for form in formset:
-#             if form.is_valid():
-#                 form.save()
-#         return HttpResponseRedirect(or x.get_absolute_url,or reverse(...))
 
 
-#let look at the formset = special set of fields to controle Num fields:
-"""
 
-fot the whole formset = one bundel
-<input type="hidden" name="form-TOTAL_FORMS" value="3" id="id_form-TOTAL_FORMS" />
-<input type="hidden" name="form-INITIAL_FORMS" value="2" id="id_form-INITIAL_FORMS" />
-<input type="hidden" name="form-MIN_NUM_FORMS" value="0" id="id_form-MIN_NUM_FORMS" />
 
-# default value = 1000
-<input type="hidden" name="form-MAX_NUM_FORMS" value="1000" id="id_form-MAX_NUM_FORMS" />
 
-#custom (here max_num = 5 in forms.py) ==> value = 5
-<input type="hidden" name="form-MAX_NUM_FORMS" value="5" id="id_form-MAX_NUM_FORMS" />
-otherwise:(if no bundel above)
-django.forms.utils.ValidationError: ['ManagementForm data is missing or has been tampered with']
-"""
-#For each form in formset (iteration)
-"""
-<tr><th><label for="id_form-0-text">Text:</label></th><td>
-<input type="text" name="form-0-text" value="Yes" id="id_form-0-text" maxlength="1024" /></td></tr>
-<tr><th><label for="id_form-0-order">Order:</label></th><td>
-<input type="number" name="form-0-order" value="1" id="id_form-0-order" /></td></tr>
-<tr><th><label for="id_form-0-correct">Correct:</label></th><td>
-<input type="checkbox" name="form-0-correct" id="id_form-0-correct" />
-<input type="hidden" name="form-0-id" value="15" id="id_form-0-id" /></td></tr> <tr><th><label for="id_form-1-text">Text:</label></th><td>
-"""
 
 
 
